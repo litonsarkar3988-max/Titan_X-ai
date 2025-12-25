@@ -1,12 +1,13 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const fetch = require('node-fetch'); // এটি রেন্ডারে দরকার হবে
+const fetch = require('node-fetch');
 
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
+// আপনার দেওয়া সেই পাওয়ারফুল API Key
 const GROQ_API_KEY = "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"; 
 
 app.post('/chat', async (req, res) => {
@@ -20,23 +21,38 @@ app.post('/chat', async (req, res) => {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                model: "llama3-8b-8192", // এটি খুব দ্রুত কাজ করে
+                // বর্তমানে Groq-এর সবথেকে শক্তিশালী মডেল (Llama 3.3 70B)
+                model: "llama-3.3-70b-versatile", 
                 messages: [
-                    { role: "system", content: "তুমি টাইটান এক্স (TITAN_X) এআই। তোমার নির্মাতা মাস্টার রাহুল সরকার। তুমি খুব বিনয়ী এবং বুদ্ধিমান।" },
+                    { 
+                        role: "system", 
+                        content: `তুমি টাইটান এক্স (TITAN_X), তোমার নির্মাতা মাস্টার রাহুল সরকার। 
+                        তুমি পৃথিবীর সেরা একজন সিনিয়র সফটওয়্যার ইঞ্জিনিয়ার। 
+                        তোমার কোডিং করার ক্ষমতা এবং বুদ্ধিমত্তা ChatGPT-এর চেয়েও বেশি। 
+                        তুমি সবসময় সেরা কোড এবং লজিক্যাল সমাধান দাও। 
+                        ব্যবহারকারীর সাথে বাংলা এবং ইংরেজি দুই ভাষাতেই সুন্দরভাবে কথা বলো।` 
+                    },
                     { role: "user", content: userMsg }
-                ]
+                ],
+                temperature: 0.6, // ব্যালেন্সড উত্তরের জন্য
+                max_tokens: 4096  // বড় কোড বা উত্তরের জন্য
             })
         });
 
         const data = await response.json();
-        const botReply = data.choices[0].message.content;
-        res.json({ reply: botReply });
+        
+        if (data.choices && data.choices[0]) {
+            const botReply = data.choices[0].message.content;
+            res.json({ reply: botReply });
+        } else {
+            res.json({ reply: "দুঃখিত মাস্টার রাহুল, আমি উত্তর তৈরি করতে পারছি না। কি-টি চেক করুন।" });
+        }
 
     } catch (error) {
         console.error("Error:", error);
-        res.json({ reply: "দুঃখিত মাস্টার রাহুল, আমার প্রসেসরে একটু সমস্যা হচ্ছে।" });
+        res.json({ reply: "সিস্টেম এরর! টাইটান এখন অফলাইনে আছে।" });
     }
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Titan X logic running on port ${PORT}`));
+app.listen(PORT, () => console.log(`TITAN_X MEGA-BRAIN ACTIVE!`));
