@@ -6,30 +6,27 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ১. টাইটানের নতুন শক্তিশালী ব্রেন ফাংশন
+// ১. টাইটানের নতুন শক্তিশালী ব্রেন (Tested & Fixed)
 async function getTitanResponse(userMessage) {
-    const currentTime = new Date().toLocaleString('bn-BD', { timeZone: 'Asia/Dhaka' });
-    
-    // নতুন এবং সচল মডেলের লিস্ট
-    const apiConfigs = [
-        { model: "gpt-4o-mini", system: "তুমি মাস্টার রাহুলের তৈরি TITAN_X AI। সব উত্তর বাংলায় দাও।" },
-        { model: "llama-3.1-70b", system: "তুমি TITAN_X AI। তুমি একজন সুপার ইন্টেলিজেন্ট রোবট।" }
-    ];
-
-    for (let config of apiConfigs) {
+    try {
+        // এই API টি অনেক বেশি নির্ভরযোগ্য এবং দ্রুত
+        const response = await axios.get(`https://api.sandipbaruwal.com.np/gemini?prompt=${encodeURIComponent(userMessage)}`);
+        
+        if (response.data && response.data.answer) {
+            return response.data.answer;
+        } else {
+            throw new Error("API Response Error");
+        }
+    } catch (error) {
+        console.log("Gemini failed, trying Llama...");
         try {
-            // নতুন API এন্ডপয়েন্ট ব্যবহার করা হয়েছে
-            const response = await axios.get(`https://delirius-api-official.vercel.app/ia/gpt4?text=${encodeURIComponent(userMessage)}`);
-
-            if (response.data && response.data.data) {
-                return response.data.data; // সরাসরি উত্তর রিটার্ন করবে
-            }
-        } catch (error) {
-            console.log(`Trying alternative brain...`);
-            continue; 
+            // ব্যাকআপ হিসেবে দ্বিতীয় এআই
+            const backupRes = await axios.get(`https://api.sandipbaruwal.com.np/gpt4o?prompt=${encodeURIComponent(userMessage)}`);
+            return backupRes.data.answer || "মাস্টার রাহুল, আমি একটু ক্লান্ত। দয়া করে আবার মেসেজ দিন।";
+        } catch (err) {
+            return "মাস্টার রাহুল, সার্ভারে সমস্যা হচ্ছে। দয়া করে ৩০ সেকেন্ড পর চেষ্টা করুন। 🛡️";
         }
     }
-    return "মাস্টার রাহুল, সিস্টেম রিলোড হচ্ছে। দয়া করে ৫ সেকেন্ড পর আবার মেসেজ দিন। 🛡️";
 }
 
 // ২. চ্যাট রুট
@@ -41,17 +38,19 @@ app.post('/chat', async (req, res) => {
     res.json({ reply: reply });
 });
 
-// ৩. হোম পেজ ডিজাইন
+// ৩. হোম পেজ
 app.get('/', (req, res) => {
-    res.send(`<body style="background:#0f172a;color:#38bdf8;text-align:center;padding-top:100px;font-family:sans-serif;">
-        <h1>🛡️ TITAN_X AI : ONLINE</h1>
-        <p>Created by Master Rahul</p>
-    </body>`);
+    res.send(`
+        <body style="background:#0f172a;color:#38bdf8;text-align:center;padding-top:100px;font-family:sans-serif;">
+            <h1>🛡️ TITAN_X AI : ONLINE</h1>
+            <p>Master Rahul, System is ready to serve you.</p>
+        </body>
+    `);
 });
 
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
-    console.log(`TITAN_X FIXED : Port ${PORT}`);
+    console.log(`TITAN_X : RUNNING ON PORT ${PORT}`);
 });
 
 // ৪. Self-Ping (জাগিয়ে রাখা)
