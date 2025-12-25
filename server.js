@@ -9,26 +9,42 @@ app.use(express.json());
 app.post('/chat', async (req, res) => {
     const userMessage = req.body.message;
 
-    try {
-        // এটি একটি ওপেন সোর্স ফ্রি এআই গেটওয়ে যা শক্তিশালী সব মডেল (Llama 3, GPT, Mistral) ব্যবহার করে
-        const response = await axios.post('https://api.airforce/v1/chat/completions', {
-            model: "llama-3-70b-instruct", // এটি চ্যাটজিপিটির চেয়েও অনেক ক্ষেত্রে শক্তিশালী
-            messages: [
-                { role: "system", content: "You are TITAN_X AI, the most powerful AI assistant created by Master Rahul. Your personality is helpful, fast, and genius. Always answer in Bengali." },
-                { role: "user", content: userMessage }
-            ]
-        });
+    // শক্তিশালী ফ্রি মডেলের তালিকা (একটি কাজ না করলে অন্যটি চলবে)
+    const models = [
+        "gpt-4o", 
+        "llama-3.1-70b-chat", 
+        "mixtral-8x7b-instruct"
+    ];
 
-        const reply = response.data.choices[0].message.content;
+    let success = false;
+    let reply = "";
+
+    for (let modelName of models) {
+        try {
+            const response = await axios.post('https://api.airforce/v1/chat/completions', {
+                model: modelName,
+                messages: [
+                    { role: "system", content: "তুমি মাস্টার রাহুলের পার্সোনাল এআই TITAN_X। তুমি অত্যন্ত বুদ্ধিমান এবং বিনয়ী। সব সময় বাংলায় উত্তর দাও।" },
+                    { role: "user", content: userMessage }
+                ]
+            }, { timeout: 10000 }); // ১০ সেকেন্ড সময়সীমা
+
+            reply = response.data.choices[0].message.content;
+            success = true;
+            break; // উত্তর পেয়ে গেলে লুপ বন্ধ হবে
+        } catch (error) {
+            console.log(`Model ${modelName} failed, trying next...`);
+        }
+    }
+
+    if (success) {
         res.json({ reply: reply });
-
-    } catch (error) {
-        console.error("Error with TITAN_X AI:", error.message);
-        res.json({ reply: "মাস্টার রাহুল, ফ্রি সার্ভারটি বর্তমানে ব্যস্ত। অনুগ্রহ করে ১ মিনিট পর আবার কমান্ড দিন।" });
+    } else {
+        res.json({ reply: "মাস্টার রাহুল, সব ফ্রি সার্ভার বর্তমানে ব্যস্ত। অনুগ্রহ করে ৩০ সেকেন্ড পর আবার চেষ্টা করুন। 🛡️" });
     }
 });
 
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
-    console.log(`TITAN_X : ONLINE on Port ${PORT}`);
+    console.log(`TITAN_X : ONLINE`);
 });
